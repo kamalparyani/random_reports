@@ -1,0 +1,17 @@
+SELECT
+    `tabItem`.`name` AS "Item Code:Link/Item:100",
+    `tabItem`.`item_name` AS "Item Name",
+    `tabItem`.`item_group` AS "Item Group",
+    `tabItem`.`description` AS "Description",
+    `tabItem`.`stock_uom` AS "UOM",
+    `tabItem`.`standard_rate` AS "Standard Rate",
+    `tabItem Default`.`expense_account` AS "Expense Account",
+    `tabItem Default`.`income_account` AS "Income Account",
+    `tabItem Default`.`selling_cost_center` AS "Selling Cost Center",
+    `tabItem Default`.`buying_cost_center` AS "Buying Cost Center"
+FROM
+    `tabItem`
+LEFT JOIN
+    `tabItem Default` ON `tabItem`.name = `tabItem Default`.parent
+WHERE
+    `tabItem`.disabled = 0
