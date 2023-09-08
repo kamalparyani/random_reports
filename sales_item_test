@@ -1,0 +1,19 @@
+SELECT
+    `tabSales Invoice`.`name` AS "Invoice Number:Link/Sales Invoice:100",
+    `tabSales Invoice`.`posting_date` AS "Invoice Date",
+    `tabSales Invoice Item`.`item_name` AS "Item Name",
+    `tabSales Invoice Item`.`item_group` AS "Item Group",
+    `tabSales Invoice Item`.`expense_account` as "Exp A/c",
+    `tabSales Invoice Item`.`item_code` AS "Item Code",
+    `tabSales Invoice Item`.`net_amount` AS "Item Net Value",
+    `tabSales Invoice Item`.`qty` AS "Quantity",
+    `tabSales Invoice`.`customer` AS "Customer"
+FROM
+    `tabSales Invoice`
+INNER JOIN
+    `tabSales Invoice Item` ON `tabSales Invoice`.`name` = `tabSales Invoice Item`.`parent`
+WHERE
+    `tabSales Invoice`.`docstatus` = 1
+    AND `tabSales Invoice`.`posting_date` BETWEEN '2023-08-01' AND '2023-09-30'
+ORDER BY
+    `tabSales Invoice`.`posting_date` DESC;
