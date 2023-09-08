@@ -1,0 +1,20 @@
+SELECT 
+    `tabSales Order`.`name` AS "Sales Order:Link/Sales Order:100",
+    `tabSales Order`.`customer` AS "Customer",
+    `tabSales Order`.`status` AS "Sauda Status",
+    `tabSales Order`.`transaction_date` AS "Order Date:Date:100",
+    `tabSales Order Item`.`item_code` AS "Item Code",
+    `tabSales Order Item`.`rate` AS "RATE:Currency:100",
+    `tabSales Order Item`.`qty` AS "Quantity",
+    `tabSales Order Item`.`amount` AS "Amount:Currency:100",
+    (`tabItem`.`standard_rate` * `tabSales Order Item`.`qty`) AS "Total Cost"
+FROM 
+    `tabSales Order`
+INNER JOIN 
+    `tabSales Order Item` ON `tabSales Order`.`name` = `tabSales Order Item`.`parent`
+INNER JOIN 
+    `tabItem` ON `tabSales Order Item`.`item_code` = `tabItem`.`item_code`
+WHERE 
+    `tabSales Order`.`docstatus` = 1 AND `tabSales Order`.`status` != "Completed" AND `tabSales Order`.`status` != "Closed"
+ORDER BY 
+    `tabSales Order`.`transaction_date` DESC;
