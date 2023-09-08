@@ -1,0 +1,122 @@
+
+f_item_code = filters.get("Item Code")
+f_item_group = filters.get("Item Group")
+columns = [
+{
+'fieldname': 'Item Code',
+'label': _('Item Code'),
+'fieldtype': 'Link',
+'options': 'Item'
+},
+{
+'fieldname': 'Item Group',
+'label': _('Item Group'),
+'fieldtype': 'Data'
+},
+
+{
+'fieldname': 'TotalNetValue',
+'label': _('SalesNetValue'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'quantity',
+'label': _('SalesQuantity'),
+'fieldtype': 'Data'
+},
+
+{
+'fieldname': 'Stock UOM',
+'label':_('StockUOM'),
+'fieldtype': 'Data'
+},
+
+{
+'fieldname': 'Weight UOM',
+'label':_('WeightUOM'),
+'fieldtype': 'Data'
+},
+
+{
+'fieldname': 'Weight Per Unit',
+'label':_('WeightPerUnit'),
+'fieldtype': 'Data'
+},
+
+{
+'fieldname': 'TotalWeight',
+'label':_('TotalWeight'),
+'fieldtype': 'Data'
+},
+
+
+] 
+ 
+ 
+ 
+ 
+ 
+ 
+query = """SELECT
+  
+    `Item Group`,
+    `Item Code`,
+    
+    SUM(net_amount) AS TotalNetValue,
+    Sum(quantity) as quantity,
+    `Stock UOM`,
+    `Weight UOM`,
+    `Weight Per Unit`,
+       SUM(quantity * `Weight Per Unit`) AS TotalWeight
+    
+    
+FROM (
+SELECT
+   
+    `tabSales Invoice Item`.`item_group` AS "Item Group",
+    `tabSales Invoice Item`.`item_code` AS "Item Code",
+    `tabSales Invoice Item`.`net_amount` AS "net_amount",
+    `tabSales Invoice Item`.`qty` AS "Quantity",
+    `tabItem`.`stock_uom` AS "Stock UOM",
+    `tabItem`.`weight_uom` AS "Weight UOM",
+    `tabItem`.`weight_per_unit` AS "Weight Per Unit"
+
+FROM
+    `tabSales Invoice`
+INNER JOIN
+    `tabSales Invoice Item` ON `tabSales Invoice`.`name` = `tabSales Invoice Item`.`parent`
+LEFT JOIN
+    `tabItem` ON `tabSales Invoice Item`.`item_code` = `tabItem`.`item_code`
+
+WHERE
+    `tabSales Invoice`.`docstatus` = 1
+    AND `tabSales Invoice`.`posting_date` BETWEEN '2023-04-01' AND '2024-03-31' ) as combined_data
+    
+"""
+
+if f_item_group:
+    query = query + """ Where `Item Group`='""" + f_item_group + """'"""
+    if f_item_code:
+        query = query + """ AND `Item Code`='""" + f_item_code + """'"""
+elif f_item_code:
+    query = query + """ Where `Item Code`='""" + f_item_code + """'"""
+
+
+
+
+
+
+query = query + """
+GROUP BY
+    `Item Code`,
+    `Item Group`
+ORDER BY
+    `Item Code`;
+    
+"""
+
+
+
+sql_data = frappe.db.sql(query, as_dict=True)
+
+data = columns, sql_data, None, None, None
