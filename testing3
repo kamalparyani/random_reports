@@ -1,0 +1,21 @@
+SELECT
+    `tabPurchase Invoice`.`name` AS "Invoice Number",
+    `tabPurchase Invoice`.`posting_date` AS "Invoice Date",
+    `tabPurchase Invoice Item`.`item_name` AS "Item Name",
+    `tabPurchase Invoice Item`.`item_code` AS "Item Code",
+    `tabPurchase Invoice Item`.`expense_account` as "Exp A/c",
+    `tabPurchase Invoice Item`.`net_amount` AS "Item Net Value",
+    `tabPurchase Invoice Item`.`qty` AS "Quantity",
+    `tabPurchase Invoice`.`supplier` AS "Supplier"
+FROM
+    `tabPurchase Invoice`
+INNER JOIN
+    `tabPurchase Invoice Item` ON `tabPurchase Invoice`.`name` = `tabPurchase Invoice Item`.`parent`
+INNER JOIN
+    `tabItem` ON `tabPurchase Invoice Item`.`item_code` = `tabItem`.`item_code`
+WHERE
+    `tabPurchase Invoice`.`docstatus` = 1
+    AND `tabItem`.`is_stock_item` = 1 -- Add this condition to filter inventory items
+    
+ORDER BY
+    `tabPurchase Invoice`.`posting_date` DESC
