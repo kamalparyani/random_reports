@@ -1,0 +1,88 @@
+f_from_date = filters.get("from_date")
+f_to_date = filters.get("to_date")
+f_item_code = filters.get("item_code")
+f_customer_code = filters.get("customer_code")
+
+columns = [
+        {
+            'fieldname': 'Sales_Order',
+            'label': _('Sales Order'),
+            'fieldtype': 'Link',
+            'options': 'Sales Order'
+        },
+        {
+            'fieldname': 'Customer',
+            'label': _('Customer'),
+            'fieldtype': 'Data',
+        },
+        {
+            'fieldname': 'Sauda_Status',
+            'label': _('Sauda Status'),
+            'fieldtype': 'Data',
+        },
+        {
+            'fieldname': 'Order_Date',
+            'label': _('Order Date'),
+            'fieldtype': 'Date',
+        },
+        {
+            'fieldname': 'Item_Code',
+            'label': _('Item Code'),
+            'fieldtype': 'Data',
+        },
+        {
+            'fieldname': 'RATE',
+            'label': _('RATE'),
+            'fieldtype': 'Data',
+        },
+	    {
+            'fieldname': 'Quantity',
+            'label': _('Quantity'),
+            'fieldtype': 'Data',
+        },
+	    {
+            'fieldname': 'Amount',
+            'label': _('Amount'),
+            'fieldtype': 'Data',
+        },
+	    {
+            'fieldname': 'Total_Cost',
+            'label': _('Total Cost'),
+            'fieldtype': 'Data',
+        },
+    ]
+
+
+query = """SELECT 
+            `tabSales Order`.`name` AS Sales_Order,
+            `tabSales Order`.`customer` AS Customer,
+            `tabSales Order`.`status` AS Sauda_Status,
+            `tabSales Order`.`transaction_date` AS Order_Date,
+            `tabSales Order Item`.`item_code` AS Item_Code,
+            `tabSales Order Item`.`rate` AS RATE,
+            `tabSales Order Item`.`qty` AS Quantity,
+            `tabSales Order Item`.`amount` AS Amount,
+            (`tabItem`.`standard_rate` * `tabSales Order Item`.`qty`) AS Total_Cost
+        FROM 
+            `tabSales Order`
+        INNER JOIN 
+            `tabSales Order Item` ON `tabSales Order`.`name` = `tabSales Order Item`.`parent`
+        INNER JOIN 
+            `tabItem` ON `tabSales Order Item`.`item_code` = `tabItem`.`item_code`
+        WHERE 
+            `tabSales Order`.`docstatus` = 1 AND `tabSales Order`.`status` != 'Completed' AND `tabSales Order`.`status` != 'Closed' """;
+
+if f_from_date:
+    query = query + """ And `tabSales Order`.`transaction_date`>='""" + f_from_date + """'""";
+if f_to_date:
+    query = query + """ And `tabSales Order`.`transaction_date`<='""" + f_to_date + """'""";
+if f_item_code:
+    query = query + """ And `tabSales Order Item`.`item_code`='""" + f_item_code + """'""";
+if f_customer_code:
+    query = query + """ And `tabSales Order`.`customer`='""" + f_customer_code + """'""";
+    
+query = query + """ ORDER BY `tabSales Order`.`transaction_date` DESC""";
+
+sql_data = frappe.db.sql(query, as_dict=True)
+
+data = columns, sql_data, None, None, None
