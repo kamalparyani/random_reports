@@ -1,0 +1,23 @@
+SELECT
+    `tabPurchase Invoice`.`name` AS "Invoice Number:Link/Purchase Invoice:100",
+    `tabPurchase Invoice`.`posting_date` AS "Invoice Date",
+    `tabPurchase Invoice Item`.`item_name` AS "Item Name",
+    `tabPurchase Invoice Item`.`cost_center` AS "cost center",
+    `tabPurchase Invoice Item`.`expense_account` as "Exp A/c",
+    `tabPurchase Invoice Item`.`item_code` AS "Item Code",
+    `tabPurchase Invoice Item`.`net_amount` AS "Item Net Value",
+    `tabPurchase Invoice Item`.`qty` AS "Quantity",
+    `tabPurchase Invoice`.`supplier` AS "Supplier"
+FROM
+    `tabPurchase Invoice`
+INNER JOIN
+    `tabPurchase Invoice Item` ON `tabPurchase Invoice`.`name` = `tabPurchase Invoice Item`.`parent`
+INNER JOIN
+    `tabItem` ON `tabPurchase Invoice Item`.`item_code` = `tabItem`.`item_code`
+WHERE
+    `tabPurchase Invoice`.`docstatus` = 1
+    AND `tabItem`.`is_stock_item` = 0 -- Add this condition to filter inventory items
+    AND `tabPurchase Invoice`.`posting_date` BETWEEN '2023-04-01' AND '2023-08-31'
+    
+ORDER BY
+    `tabPurchase Invoice`.`posting_date` DESC
