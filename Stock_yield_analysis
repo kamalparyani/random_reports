@@ -1,0 +1,197 @@
+
+f_item_code = filters.get("Item Code")
+f_item_group = filters.get("Item Group")
+columns = [
+{
+'fieldname': 'Item Code',
+'label': _('Item Code'),
+'fieldtype': 'Link',
+'options': 'Item'
+},
+{
+'fieldname': 'Item Group',
+'label': _('Item Group'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'PurchaseNetValue',
+'label': _('PurchaseNetValue'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'PurchaseQuantity',
+'label': _('PurchaseQuantity'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'SalesNetValue',
+'label': _('SalesNetValue'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'SalesQuantity',
+'label': _('SalesQuantity'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'OpeningStockNetValue',
+'label': _('OpeningStockNetValue'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'OpeningStockQuantity',
+'label': _('OpeningStockQuantity'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'ClosingStockNetValue',
+'label': _('ClosingStockNetValue'),
+'fieldtype': 'Data'
+},
+{
+'fieldname': 'ClosingStockQuantity',
+'label': _('ClosingStockQuantity'),
+'fieldtype': 'Data'
+},
+]
+
+query = """ SELECT
+    `Item Code`,
+    `Item Group`,
+    SUM(CASE WHEN Type = 'Purchase' THEN TotalNetValue ELSE 0 END) AS PurchaseNetValue,
+    SUM(CASE WHEN Type = 'Purchase' THEN Quantity ELSE 0 END) AS PurchaseQuantity,
+    SUM(CASE WHEN Type = 'Sales' THEN TotalNetValue ELSE 0 END) AS SalesNetValue,
+    SUM(CASE WHEN Type = 'Sales' THEN Quantity ELSE 0 END) AS SalesQuantity,
+    SUM(CASE WHEN Type = 'Opening Stock' THEN TotalNetValue ELSE 0 END) AS OpeningStockNetValue,
+    SUM(CASE WHEN Type = 'Opening Stock' THEN Quantity ELSE 0 END) AS OpeningStockQuantity,
+    SUM(CASE WHEN Type = 'Closing Stock' THEN TotalNetValue ELSE 0 END) AS ClosingStockNetValue,
+    SUM(CASE WHEN Type = 'Closing Stock' THEN Quantity ELSE 0 END) AS ClosingStockQuantity
+FROM (
+    
+    SELECT
+    Type,
+    `Item Group`,
+    `Item Code`,
+    
+    SUM(net_amount) AS TotalNetValue,
+    Sum(quantity) as quantity
+    
+    
+FROM
+
+
+
+(SELECT
+    'Purchase' AS "Type",
+    `tabPurchase Invoice Item`.`item_group` AS "Item Group",
+    `tabPurchase Invoice Item`.`item_code` AS "Item Code",
+    `tabPurchase Invoice Item`.`net_amount` AS "net_amount",
+    `tabPurchase Invoice Item`.`qty` AS "Quantity"
+
+FROM
+    `tabPurchase Invoice`
+INNER JOIN
+    `tabPurchase Invoice Item` ON `tabPurchase Invoice`.`name` = `tabPurchase Invoice Item`.`parent`
+WHERE
+    `tabPurchase Invoice`.`docstatus` = 1
+    AND `tabPurchase Invoice`.`posting_date` BETWEEN '2023-04-01' AND '2024-03-31'
+UNION ALL
+SELECT
+    'Sales' AS "Type",
+    `tabSales Invoice Item`.`item_group` AS "Item Group",
+    `tabSales Invoice Item`.`item_code` AS "Item Code",
+    `tabSales Invoice Item`.`net_amount` AS "net_amount",
+    `tabSales Invoice Item`.`qty` AS "Quantity"
+ 
+FROM
+    `tabSales Invoice`
+INNER JOIN
+    `tabSales Invoice Item` ON `tabSales Invoice`.`name` = `tabSales Invoice Item`.`parent`
+WHERE
+    `tabSales Invoice`.`docstatus` = 1
+    AND `tabSales Invoice`.`posting_date` BETWEEN '2023-04-01' AND '2024-03-31'
+
+UNION ALL
+
+SELECT
+        'Opening Stock' AS "Type",
+        `tabItem`.`item_group` AS `Item Group`,
+        `tabStock Reconciliation Item`.`item_code` AS "Item Code",
+        `tabStock Reconciliation Item`.`amount` AS "net_amount",
+        `tabStock Reconciliation Item`.`qty` AS "Quantity"
+    FROM
+        `tabStock Reconciliation`
+    INNER JOIN
+        `tabStock Reconciliation Item` ON `tabStock Reconciliation`.`name` = `tabStock Reconciliation Item`.`parent`
+    INNER JOIN
+        `tabItem` ON `tabStock Reconciliation Item`.`item_code` = `tabItem`.`name`
+    WHERE
+        `tabStock Reconciliation`.`docstatus` = 1
+        And `tabStock Reconciliation`.`purpose` = "Opening Stock" 
+    
+    UNION ALL
+    
+    SELECT
+    'Closing Stock' AS "Type",
+    `tabItem`.`item_group` AS `Item Group`,
+    `tabBin`.`item_code` AS "Item Code",
+    SUM(`tabBin`.`stock_value`) AS "Total Item Net Value",
+    SUM(`tabBin`.`actual_qty`) AS "Total Quantity"
+FROM
+    `tabBin`
+INNER JOIN
+    `tabItem` ON `tabBin`.`item_code` = `tabItem`.`name`
+GROUP BY
+    `tabItem`.`item_group`, `tabBin`.`item_code`
+
+    
+    
+    
+    
+    
+    
+    
+    
+        order by "type"
+        
+            ) as combined_data
+    
+    GROUP BY
+    Type,
+    `Item Code`
+    order by "Item code",Type
+    
+
+    
+    
+    
+) AS combined_data2
+
+"""
+
+if f_item_group:
+    query = query + """ Where `Item Group`='""" + f_item_group + """'"""
+    if f_item_code:
+        query = query + """ AND `Item Code`='""" + f_item_code + """'"""
+elif f_item_code:
+    query = query + """ Where `Item Code`='""" + f_item_code + """'"""
+
+
+
+
+
+
+query = query + """
+GROUP BY
+    `Item Code`,
+    `Item Group`
+ORDER BY
+    `Item Code`;
+    
+"""
+
+
+
+sql_data = frappe.db.sql(query, as_dict=True)
+
+data = columns, sql_data, None, None, None
